@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Grammar Checker</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: linear-gradient(to right, #f8bbd0, #b2ebf2);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      background: #f1f8e9;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      background: #00796b;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #004d40;
+    }
+    .alert {
+      background: #fff3cd;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2>📝 Grammar & Spell Checker</h2>
+    <textarea id="essay"></textarea><br>
+    <button onclick="check()">Check</button>
+    <div id="output"></div>
+  </div>
+
+  <script>
+    function check() {
+      const text = document.getElementById("essay").value;
+      const out = document.getElementById("output");
+      out.innerHTML = "🔎 Checking...";
+      fetch("https://api.languagetool.org/v2/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ text, language: "en-US" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.matches.length === 0) {
+          out.innerHTML = "<div class='alert'>✅ No errors found!</div>";
+        } else {
+          out.innerHTML = data.matches.map(m => `
+            <div class='alert'>
+              ❗ <b>${m.message}</b><br>
+              🔴 Wrong: "${text.substr(m.offset, m.length)}"<br>
+              ✅ Suggestion: ${m.replacements.map(r => r.value).join(", ") || "None"}
+            </div>
+          `).join("");
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
